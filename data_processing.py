@@ -11,6 +11,7 @@ def generate_rent_summary(df_rent):
     Returns:
         pd.DataFrame: Summary statistics with count, min, median, and max rent for each group
     """
+    df_rent['Rent'] = pd.to_numeric(df_rent['Rent'], errors='coerce')
     rent_summary = df_rent.groupby(['Property Type', 'Beds', 'Baths'])['Rent'].agg([
         ('Count', 'count'),
         ('Min Rent', 'min'),
