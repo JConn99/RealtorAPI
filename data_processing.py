@@ -1,4 +1,5 @@
 # Data processing functions
+import pandas as pd
 
 def generate_rent_summary(df_rent):
     """
