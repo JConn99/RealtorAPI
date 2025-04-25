@@ -4,7 +4,7 @@ import requests
 import pandas as pd
 import json
 
-def search_rental_properties(api_key, location, limit=100):
+def search_rental_properties(api_key, location, limit=1000):
     """
     Search for rental properties using the Realtor API
     
@@ -311,3 +311,180 @@ def display_and_store_rentals(properties_data):
     except Exception as e:
         print(f"Error creating DataFrame: {str(e)}")
         return None
+
+
+
+# List to store property data for DataFrame
+
+def search_properties(api_key, location, limit=1000):
+    """
+    Search for properties using the Realtor API
+    
+    Parameters:
+        api_key (str): Your RapidAPI key
+        location (str): City and state, e.g., "New York, NY"
+        property_type (str): Type of property (house, condo, apartment)
+        limit (int): Maximum number of results to return
+    
+    Returns:
+        dict: JSON response from the API
+    """
+    url = 'https://realtor16.p.rapidapi.com/search/forsale'
+
+    querystring =  {"location":location, 
+                    "search_radius":"0",
+                    "limit":limit}
+    
+    headers = {
+        "X-RapidAPI-Key": api_key,
+        "X-RapidAPI-Host": "realtor16.p.rapidapi.com"
+    }
+    
+    response = requests.get(url, headers=headers, params=querystring)
+    
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print(f"Error: {response.status_code}")
+        #print(response.text)
+        return None
+
+def display_and_store_properties(properties_data):
+    """Display property information in a readable format based on the actual JSON structure"""
+
+    #Empty df to be filled in
+    property_records = []
+
+    if not properties_data or 'properties' not in properties_data:
+        print("No properties found or invalid data")
+        return
+    
+    for prop in properties_data['properties']:
+        #print(f"\n{'='*50}")
+        
+        # Address information
+        address = prop.get('location', {}).get('address', {})
+        address_line = address.get('line', 'N/A')
+        city = address.get('city', 'N/A')
+        state = address.get('state_code', 'N/A')
+        zip_code = address.get('postal_code', 'N/A')
+        
+        #print(f"Address: {address_line}")
+        #print(f"City: {city}")
+        #print(f"State: {state}")
+        #print(f"Zip: {zip_code}")
+        
+        # Property details
+        description = prop.get('description', {})
+        price = prop.get('list_price', 'N/A')
+        beds = description.get('beds', 'N/A')
+        baths = description.get('baths_consolidated', 'N/A')
+        sqft = description.get('sqft', 'N/A')
+        lot_sqft = description.get('lot_sqft', 'N/A')
+        property_type_desc = description.get('type', 'N/A')
+        
+        #if price != 'N/A':
+        #    print(f"Price: ${price:,}")
+        #else:
+        #    print(f"Price: {price}")
+        #print(f"Beds: {beds}")
+        #print(f"Baths: {baths}")
+        #print(f"Sq Ft: {sqft}")
+        #print(f"Lot Size (sq ft): {lot_sqft}")
+        #print(f"Property Type: {property_type_desc}")
+        
+        
+        # Status flags
+        flags = prop.get('flags', {})
+        status_flags = []
+        if flags.get('is_new_listing'):
+            status_flags.append("NEW LISTING")
+        if flags.get('is_price_reduced'):
+            status_flags.append("PRICE REDUCED")
+        if flags.get('is_pending'):
+            status_flags.append("PENDING")
+        if flags.get('is_foreclosure'):
+            status_flags.append("FORECLOSURE")
+        if flags.get('is_coming_soon'):
+            status_flags.append("COMING SOON")
+        if flags.get('is_new_construction'):
+            status_flags.append("NEW CONSTRUCTION")
+        if flags.get('is_contingent'):
+            status_flags.append("CONTINGENT")
+            
+        status = ', '.join(status_flags) if status_flags else "ACTIVE"
+        #print(f"Status: {status}")
+        
+        # Listing information
+        listing_id = prop.get('listing_id', 'N/A')
+        property_id = prop.get('property_id', 'N/A')
+        list_date = prop.get('list_date', 'N/A')
+        
+        #print(f"Listing ID: {listing_id}")
+        #print(f"Property ID: {property_id}")
+        #print(f"List Date: {list_date}")
+        
+        # Images
+        primary_image = prop.get('primary_photo', {}).get('href', 'N/A')
+        #if primary_image != 'N/A':
+        #    print(f"Primary Image: {primary_image}")
+        
+        # Additional photos count
+        photos = prop.get('photos', [])
+        additional_photos = len(photos) - 1 if photos and len(photos) > 1 else 0
+        #if additional_photos > 0:
+        #    print(f"Additional Photos: {additional_photos}")
+        
+        # Virtual tours
+        virtual_tours = prop.get('virtual_tours', [])
+        virtual_tour = virtual_tours[0].get('href', 'N/A') if virtual_tours and len(virtual_tours) > 0 else 'N/A'
+        #if virtual_tour != 'N/A':
+        #    print(f"Virtual Tour: {virtual_tour}")
+        
+        # Listing agency
+        branding = prop.get('branding', [])
+        listed_by = branding[0].get('name', 'N/A') if branding and len(branding) > 0 else 'N/A'
+        #if listed_by != 'N/A':
+        #    print(f"Listed By: {listed_by}")
+        
+        # Permalink
+        permalink = prop.get('permalink', 'N/A')
+        listing_url = f"https://www.realtor.com/realestateandhomes-detail/{permalink}" if permalink != 'N/A' else 'N/A'
+        #print(f"Listing URL: {listing_url}")
+        
+        # Add data to records list
+        property_records.append({
+            "Address": address_line,
+            "City": city,
+            "State": state,
+            "Zip": zip_code,
+            "Price": price,
+            "Beds": beds,
+            "Baths": baths,
+            "Sq Ft": sqft,
+            "Lot Size (sq ft)": lot_sqft,
+            "Property Type": property_type_desc,
+            "Status": status,
+            "Listing ID": listing_id,
+            "Property ID": property_id,
+            "List Date": list_date,
+            "Primary Image": primary_image,
+            "Additional Photos": additional_photos,
+            "Virtual Tour": virtual_tour,
+            "Listed By": listed_by,
+            "Listing URL": listing_url
+        })
+    
+    # Create DataFrame from records
+    df = pd.DataFrame(property_records)
+    
+    #print(f"\n{'='*50}")
+    #print(f"Found {len(property_records)} properties.")
+    #print("Data stored in DataFrame")
+    
+    # Display DataFrame overview
+    #print("\nDataFrame Preview:")
+    #print(f"Shape: {df.shape}")
+    #print(df.head())
+    
+    return df
