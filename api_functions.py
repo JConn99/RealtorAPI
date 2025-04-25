@@ -425,7 +425,7 @@ def display_and_store_properties(properties_data):
         #print(f"List Date: {list_date}")
         
         # Images
-        primary_image = prop.get('primary_photo', {}).get('href', 'N/A')
+        primary_image = (prop.get('primary_photo') or {}).get('href', 'N/A')
         #if primary_image != 'N/A':
         #    print(f"Primary Image: {primary_image}")
         
