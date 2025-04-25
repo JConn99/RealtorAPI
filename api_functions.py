@@ -97,7 +97,7 @@ def display_and_store_rentals(properties_data):
                     formatted_rent = f"${rent}"
                     rent = rent
             else:
-                print("Monthly Rent: N/A")
+                #print("Monthly Rent: N/A")
                 formatted_rent = "N/A"
                 rent = "N/A"
                 
