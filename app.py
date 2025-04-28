@@ -46,9 +46,9 @@ if search_button and zip_code and zip_code.isdigit() and len(zip_code) == 5:
 
         # Apply styling to the dataframe
         styled_summary_rent = rent_summary.style.format({
-            'Min Rent per Sq Ft': '${:.2f}',
-            'Median Rent per Sq Ft': '${:.2f}',
-            'Max Rent per Sq Ft': '${:.2f}',
+            'Min Rent': '${:.0f}',
+            'Median Rent': '${:.0f}',
+            'Max Rent': '${:.0f}',
             'Count': '{:.0f}',
             'Beds': '{:.0f}'
         }).set_properties(**{
