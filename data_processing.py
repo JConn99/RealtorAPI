@@ -13,11 +13,14 @@ def generate_rent_summary(df_rent):
         pd.DataFrame: Summary statistics with count, min, median, and max rent for each group
     """
     df_rent['Rent'] = pd.to_numeric(df_rent['Rent'], errors='coerce')
-    rent_summary = df_rent.groupby(['Property Type', 'Beds', 'Baths'])['Rent'].agg([
+    df_rent['Sq Ft'] = pd.to_numeric(df_rent['Sq Ft'], errors='coerce')
+    df_rent['Rent per Sq Ft'] = df_rent['Rent'] / df_rent['Sq Ft']
+    
+    rent_summary = df_rent.groupby(['Property Type', 'Beds', 'Baths'])['Rent per Sq Ft'].agg([
         ('Count', 'count'),
-        ('Min Rent', 'min'),
-        ('Median Rent', 'median'),
-        ('Max Rent', 'max')
+        ('Min Rent per Sq Ft', 'min'),
+        ('Median Rent per Sq Ft', 'median'),
+        ('Max Rent per Sq Ft', 'max')
     ]).reset_index()
     
     return rent_summary
@@ -29,7 +32,7 @@ def calculate_investment_metrics(sale_df, rent_summary):
     
     Parameters:
     - sale_df: DataFrame with property listings including Price, Property Type, Beds, Baths
-    - rent_summary: DataFrame with rental data including Property Type, Beds, Baths, Median Rent
+    - rent_summary: DataFrame with rental data including Property Type, Beds, Baths, Median Rent per Sq Ft
     
     Returns:
     - DataFrame with original data plus investment metrics, sorted by Cap Rate
@@ -39,21 +42,21 @@ def calculate_investment_metrics(sale_df, rent_summary):
         'Property Type': 'Property Type',
         'Beds': 'Beds',
         'Baths': 'Baths',
-        'Median Rent': 'Median Rent'
+        'Median Rent per Sq Ft': 'Median Rent per Sq Ft'
     })
     
     # Perform the left join to keep all rows from df
     result_df = sale_df.merge(
-        rent_df_clean[['Property Type', 'Beds', 'Baths', 'Median Rent']], 
+        rent_df_clean[['Property Type', 'Beds', 'Baths', 'Median Rent per Sq Ft']], 
         on=['Property Type', 'Beds', 'Baths'],
         how='left'
     )
     
     # 1. Create Estimated Annual Rent column
-    result_df['Estimated Annual Rent'] = result_df['Median Rent'] * 12
+    result_df['Estimated Annual Rent'] = result_df['Median Rent per Sq Ft'] * result_df['Sq Ft'] * 12
     
     # 2. Create Projected Expenses column
-    result_df['Projected Expenses'] = result_df['Estimated Annual Rent'] * 0.4
+    result_df['Projected Expenses'] = result_df['Estimated Annual Rent'] * 0.5
     
     # 3. Create NOI (Net Operating Income) column
     result_df['NOI'] = result_df['Estimated Annual Rent'] - result_df['Projected Expenses']
