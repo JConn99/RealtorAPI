@@ -74,7 +74,7 @@ def calculate_investment_metrics(sale_df, rent_summary):
     selected_columns = [
         'Address', 'City', 'State', 'Zip', 'Beds', 'Baths', 'Sq Ft', 
         'Property Type', 'Status', 'Listing Price', 'Estimated Annual Rent',
-        'Projected Expenses', 'NOI', 'Cap Rate', 'Listing URL'
+        'Projected Expenses', 'NOI', 'Cap Rate', 'Listing URL', 'Primary Image'
     ]
 
     numeric_columns = ['Beds', 'Baths', 'Sq Ft', 'Listing Price', 'Estimated Annual Rent', 'Projected Expenses', 'NOI', 'Cap Rate']

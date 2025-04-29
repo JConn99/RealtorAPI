@@ -76,47 +76,94 @@ if search_button and zip_code and zip_code.isdigit() and len(zip_code) == 5:
         )
 
 
-        #Display For Sale Properties
-        st.subheader('For Sale Available Properties')
+        # #Display For Sale Properties
+        # st.subheader('For Sale Available Properties')
 
-        # Apply styling to the sale dataframe
-        styled_summary_sale = sale_results.style.format({
-            'Listing Price': '${:,.0f}',
-            'Estimated Annual Rent': '${:,.0f}',
-            'Projected Expenses': '${:,.0f}',
-            'NOI': '${:,.0f}',
-            'Cap Rate': '{:.1f}%',
-            'Beds': '{:.0f}',
-            'Baths': '{:.0f}',
-            'Sq Ft': '{:,.0f}'
-        }, na_rep="N/A").set_properties(**{
-            'text-align': 'center',
-            'font-size': '14px',
-            'border': '1px solid #EAEAEA'
-        }).set_table_styles([
-            {'selector': 'th', 'props': [('background-color', '#f2f2f2'), 
-                                        ('color', '#333'), 
-                                        ('font-weight', 'bold'),
-                                        ('text-align', 'center')]},
-            {'selector': 'tr:hover', 'props': [('background-color', '#f9f9f9')]},
-        ])
-        st.dataframe(styled_summary_sale, use_container_width=True, height=400)
-        #st.dataframe(styled_summary_sale, column_config={"Link": st.column_config.LinkColumn("Listing URL")})
+        # # Apply styling to the sale dataframe
+        # styled_summary_sale = sale_results.style.format({
+        #     'Listing Price': '${:,.0f}',
+        #     'Estimated Annual Rent': '${:,.0f}',
+        #     'Projected Expenses': '${:,.0f}',
+        #     'NOI': '${:,.0f}',
+        #     'Cap Rate': '{:.1f}%',
+        #     'Beds': '{:.0f}',
+        #     'Baths': '{:.0f}',
+        #     'Sq Ft': '{:,.0f}'
+        # }, na_rep="N/A").set_properties(**{
+        #     'text-align': 'center',
+        #     'font-size': '14px',
+        #     'border': '1px solid #EAEAEA'
+        # }).set_table_styles([
+        #     {'selector': 'th', 'props': [('background-color', '#f2f2f2'), 
+        #                                 ('color', '#333'), 
+        #                                 ('font-weight', 'bold'),
+        #                                 ('text-align', 'center')]},
+        #     {'selector': 'tr:hover', 'props': [('background-color', '#f9f9f9')]},
+        # ])
+        # st.dataframe(styled_summary_sale, use_container_width=True, height=400)
+        # #st.dataframe(styled_summary_sale, column_config={"Link": st.column_config.LinkColumn("Listing URL")})
 
-        # Add download button for the for sale data
-        sale_csv = sale_results.to_csv(index=False)
-        st.download_button(
-            label="Download data as CSV",
-            data=sale_csv,
-            file_name="forsale_summary.csv",
-            mime="text/csv",
-        )
+        # # Add download button for the for sale data
+        # sale_csv = sale_results.to_csv(index=False)
+        # st.download_button(
+        #     label="Download data as CSV",
+        #     data=sale_csv,
+        #     file_name="forsale_summary.csv",
+        #     mime="text/csv",
+        # )
                 
-        # Optional: Add filters
-        #st.subheader('Filter Results')
-        #min_beds = st.slider('Minimum Bedrooms', 0, 5, 0)
-        #max_price = st.slider('Maximum Price ($)', 500, 10000, 10000, step=100)
+        # # Optional: Add filters
+        # #st.subheader('Filter Results')
+        # #min_beds = st.slider('Minimum Bedrooms', 0, 5, 0)
+        # #max_price = st.slider('Maximum Price ($)', 500, 10000, 10000, step=100)
 
 
+        st.title("Property Listings")
 
+        # Create a card for each property
+        for i, row in sale_results.iterrows():
+            # Create a container for each property
+            property_container = st.container()
+            
+            with property_container:
+                cols = st.columns([2, 3])
+                
+                # Column 1: Image
+                with cols[0]:
+                    st.image(row['Primary Image'], use_column_width=True)
+                
+                # Column 2: Property details with reduced top padding
+                with cols[1]:
+                    st.markdown(f"""
+                        <div style='line-height: 1.1; padding-top: 0; margin-top: -10px;'>
+                            <h3 style='margin-bottom: 0.2rem; margin-top: 0;'>{row['Address']}</h3>
+                            <p style='margin-bottom: 0.2rem;'>{row['City']}, {row['State']} {row['Zip']}</p>
+                            <p style='font-size: 1.2rem; font-weight: 500;'>${row['Listing Price']:,.0f}</p>
+                        </div>
+                    """, unsafe_allow_html=True)
+
+                    # Add listing price prominently after location
+                    #st.markdown(f"### {row['Listing Price']}")
+                    
+                    # Property specs
+                    specs_cols = st.columns(3)
+                    specs_cols[0].metric("Beds", row['Beds'])
+                    specs_cols[1].metric("Baths", row['Baths'])
+                    specs_cols[2].metric("Sq Ft", row['Sq Ft'])
+
+                    
+                    # Financial details
+                    st.write(f"**Type:** {row['Property Type']} | **Status:** {row['Status']}")
+                    
+                    # Investment metrics with proper formatting
+                    metrics_cols = st.columns(3)
+                    metrics_cols[0].metric("Annual Rent", f"${row['Estimated Annual Rent']:,.0f}")
+                    metrics_cols[1].metric("NOI", f"${row['NOI']:,.0f}")
+                    metrics_cols[2].metric("Cap Rate", f"{row['Cap Rate']:.1f}%")
+                    
+                    # Add a link to the listing
+                    st.markdown(f"[View Listing]({row['Listing URL']})")
+            
+            # Add a divider between properties
+            st.divider()
 
