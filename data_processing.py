@@ -1,5 +1,8 @@
 # Data processing functions
 import pandas as pd
+from geopy.geocoders import Nominatim
+from geopy.extra.rate_limiter import RateLimiter
+import time
 
 def generate_rent_summary(df_rent):
     """
@@ -81,4 +84,44 @@ def calculate_investment_metrics(sale_df, rent_summary):
     for col in numeric_columns:
         result_df[col] = pd.to_numeric(result_df[col], errors='coerce')
     
-    return result_df[selected_columns]
+    # Return top 10 results
+    return result_df[selected_columns].head(10)
+
+
+def geocode_addresses(df):
+
+    # A little manipulation
+    geo_df = df.copy()
+    geo_df['full_address'] = geo_df['Address'] + ', ' + geo_df['City'] + ', ' + geo_df['State'] + ' ' + geo_df['Zip'].astype(str)
+
+    # Initialize geocoder with user_agent
+    geolocator = Nominatim(user_agent="streamlit_app")
+    # Use rate limiter to respect API limits
+    geocode = RateLimiter(geolocator.geocode, min_delay_seconds=1)
+
+    # Add latitude and longitude columns
+    geo_df['latitude'] = None
+    geo_df['longitude'] = None
+
+    #Add lat and lon to data
+    for i, row in geo_df.iterrows():
+        try:
+            location = geocode(row['full_address'])
+            if location:
+                geo_df.at[i, 'latitude'] = location.latitude
+                geo_df.at[i, 'longitude'] = location.longitude
+            else:
+                print(f"Could not geocode address: {row['full_address']}")
+        except Exception as e:
+            print(f"Error geocoding address: {row['full_address']} - {str(e)}")
+
+    # Filter out rows with missing coordinates
+    map_df = geo_df.dropna(subset=['latitude', 'longitude'])
+
+    # Calculate the center of the map
+    map_center = [
+        map_df['latitude'].mean(),
+        map_df['longitude'].mean()
+    ]
+
+    return map_df, map_center

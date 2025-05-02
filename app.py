@@ -1,13 +1,18 @@
+### Import Libraries
 import streamlit as st
 import requests
 import pandas as pd
 import json
+import pydeck as pdk
 
 from api_functions import search_rental_properties, display_and_store_rentals
 from api_functions import search_properties, display_and_store_properties
-from data_processing import generate_rent_summary, calculate_investment_metrics
+from data_processing import generate_rent_summary, calculate_investment_metrics, geocode_addresses
 
+# Configuration Secrets
 REALTOR_API_KEY = st.secrets.realtor_api_key.REALTOR_API_KEY
+MAPBOX_API_KEY = st.secrets.mapbox_api_key.MAPBOX_API_KEY
+pdk.settings.mapbox_key = MAPBOX_API_KEY
 
 # Set page title and description
 st.title('Realtor.com Rental Property Finder')
@@ -73,6 +78,43 @@ if search_button and zip_code and zip_code.isdigit() and len(zip_code) == 5:
             data=rent_csv,
             file_name="rental_summary.csv",
             mime="text/csv",
+        )
+
+        ### Geo Information
+        st.title("Address Map Visualization")
+
+        # Get Locations
+        map_df, map_center = geocode_addresses(df = sale_results)
+
+        if len(map_df) > 0:
+            st.subheader("Map of Addresses")
+        
+        map_view = st.pydeck_chart(pdk.Deck(
+            map_style='mapbox://styles/mapbox/streets-v11',
+            initial_view_state=pdk.ViewState(
+                latitude=map_center[0],
+                longitude=map_center[1],
+                zoom=13,
+                pitch=0,
+            ),
+            layers=[
+                pdk.Layer(
+                    'ScatterplotLayer',
+                    data=map_df,
+                    get_position='[longitude, latitude]',
+                    get_color='[200, 30, 0, 160]',
+                    get_radius=50,
+                    pickable=True,
+                    auto_highlight=True
+                )],
+            tooltip={
+                "html": "<b>Address:</b> {Address}",
+                "style": {
+                    "backgroundColor": "steelblue",
+                    "color": "white"
+                    }
+                }
+            )
         )
 
 
@@ -166,4 +208,9 @@ if search_button and zip_code and zip_code.isdigit() and len(zip_code) == 5:
             
             # Add a divider between properties
             st.divider()
+
+
+
+
+
 
