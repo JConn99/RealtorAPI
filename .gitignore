@@ -29,3 +29,6 @@ ENV/
 
 # VS Code
 .vscode/
+
+# Secrets
+.streamlit/secrets.toml

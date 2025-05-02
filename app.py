@@ -7,7 +7,7 @@ from api_functions import search_rental_properties, display_and_store_rentals
 from api_functions import search_properties, display_and_store_properties
 from data_processing import generate_rent_summary, calculate_investment_metrics
 
-API_KEY = "f8652a60a8mshf167b4d824fc77bp1b9522jsnb4348a0da4d6"
+REALTOR_API_KEY = st.secrets.realtor_api_key.REALTOR_API_KEY
 
 # Set page title and description
 st.title('Realtor.com Rental Property Finder')
@@ -26,7 +26,7 @@ if zip_code and not (zip_code.isdigit() and len(zip_code) == 5):
 if search_button and zip_code and zip_code.isdigit() and len(zip_code) == 5:
     with st.spinner('Fetching properties...'):
         # Fetch API
-        results = search_rental_properties(API_KEY, zip_code)
+        results = search_rental_properties(api_key=REALTOR_API_KEY, location=zip_code)
 
         if results:
             # Store results in DataFrame and display
@@ -35,7 +35,7 @@ if search_button and zip_code and zip_code.isdigit() and len(zip_code) == 5:
 
         
         # Fetch For Sale Results as well
-        sale_results = search_properties(API_KEY, zip_code)
+        sale_results = search_properties(api_key=REALTOR_API_KEY, location=zip_code)
         if sale_results:
             # Store results in DataFrame and display
             df_sale = display_and_store_properties(sale_results)
